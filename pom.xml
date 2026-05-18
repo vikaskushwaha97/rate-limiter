@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>io.github.vikaskushwaha</groupId>
+    <artifactId>rate-limiter</artifactId>
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
+
+    <name>Java Rate Limiter Library</name>
+    <description>
+        Production-grade Token Bucket and Sliding Window Counter rate limiting
+        algorithms built with lock-free CAS operations using AtomicLong.
+    </description>
+    <url>https://github.com/vikaskushwaha/rate-limiter</url>
+
+    <properties>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- Dependency versions -->
+        <junit.version>5.10.2</junit.version>
+        <jmh.version>1.37</jmh.version>
+
+        <!-- Plugin versions -->
+        <maven-surefire.version>3.2.5</maven-surefire.version>
+        <maven-javadoc.version>3.6.3</maven-javadoc.version>
+        <maven-shade.version>3.5.2</maven-shade.version>
+    </properties>
+
+    <dependencies>
+        <!-- ===== TEST SCOPE ===== -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- ===== JMH BENCHMARK SCOPE ===== -->
+        <dependency>
+            <groupId>org.openjdk.jmh</groupId>
+            <artifactId>jmh-core</artifactId>
+            <version>${jmh.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.openjdk.jmh</groupId>
+            <artifactId>jmh-generator-annprocess</artifactId>
+            <version>${jmh.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Surefire: run JUnit 5 tests -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${maven-surefire.version}</version>
+                <configuration>
+                    <includes>
+                        <include>**/*Test.java</include>
+                        <include>**/*Tests.java</include>
+                        <include>**/*StressTest.java</include>
+                    </includes>
+                    <excludes>
+                        <!-- Exclude JMH benchmark runners from surefire -->
+                        <exclude>**/*Benchmark*.java</exclude>
+                        <exclude>**/BenchmarkRunner.java</exclude>
+                    </excludes>
+                    <argLine>-ea</argLine>
+                </configuration>
+            </plugin>
+
+            <!-- Javadoc plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>${maven-javadoc.version}</version>
+                <configuration>
+                    <show>public</show>
+                    <failOnError>false</failOnError>
+                    <doclint>all,-missing</doclint>
+                    <windowtitle>Java Rate Limiter Library API</windowtitle>
+                    <doctitle>Java Rate Limiter Library — API Documentation</doctitle>
+                    <bottom>
+                        Copyright © 2025 Vikas Kushwaha. MIT License.
+                    </bottom>
+                </configuration>
+            </plugin>
+
+            <!-- Shade plugin: build fat-jar for JMH benchmark runner -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>${maven-shade.version}</version>
+                <executions>
+                    <execution>
+                        <id>jmh-benchmark-jar</id>
+                        <phase>package</phase>
+                        <goals><goal>shade</goal></goals>
+                        <configuration>
+                            <shadedArtifactAttached>true</shadedArtifactAttached>
+                            <shadedClassifierName>benchmarks</shadedClassifierName>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>org.openjdk.jmh.Main</mainClass>
+                                </transformer>
+                            </transformers>
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
