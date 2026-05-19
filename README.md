@@ -194,12 +194,10 @@ See [BENCHMARK_RESULTS.md](BENCHMARK_RESULTS.md) for full numbers.
 
 | Threads | Throughput | Avg Latency |
 |---|---|---|
-| 1 | ~X M ops/sec | ~Y ns/op |
-| 4 | ~X M ops/sec | ~Y ns/op |
-| 8 | ~X M ops/sec | ~Y ns/op |
-| 16 | ~X M ops/sec | ~Y ns/op |
-
-> Replace X/Y with your actual JMH numbers after running benchmarks.
+| 1 | ~22.0 M ops/sec | ~44 ns/op |
+| 4 | ~26.5 M ops/sec | ~430 ns/op |
+| 8 | ~22.7 M ops/sec | ~972 ns/op |
+| 16 | ~8.8 M ops/sec | ~2197 ns/op |
 
 **To run benchmarks:**
 

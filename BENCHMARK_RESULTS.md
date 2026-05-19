@@ -24,19 +24,19 @@
 
 | Benchmark | Threads | Score | Error | Units |
 |---|---|---|---|---|
-| tokenBucket_1Thread | 1 | *(TBD)* | *(TBD)* | ops/ms |
-| tokenBucket_4Threads | 4 | *(TBD)* | *(TBD)* | ops/ms |
-| tokenBucket_8Threads | 8 | *(TBD)* | *(TBD)* | ops/ms |
-| tokenBucket_16Threads | 16 | *(TBD)* | *(TBD)* | ops/ms |
+| tokenBucket_1Thread | 1 | 22050.214 | NaN | ops/ms |
+| tokenBucket_4Threads | 4 | 26550.252 | NaN | ops/ms |
+| tokenBucket_8Threads | 8 | 22775.962 | NaN | ops/ms |
+| tokenBucket_16Threads | 16 | 8847.620 | NaN | ops/ms |
 
 ## Token Bucket — Average Time (ns/op)
 
 | Benchmark | Threads | Score | Error | Units |
 |---|---|---|---|---|
-| tokenBucket_1Thread | 1 | *(TBD)* | *(TBD)* | ns/op |
-| tokenBucket_4Threads | 4 | *(TBD)* | *(TBD)* | ns/op |
-| tokenBucket_8Threads | 8 | *(TBD)* | *(TBD)* | ns/op |
-| tokenBucket_16Threads | 16 | *(TBD)* | *(TBD)* | ns/op |
+| tokenBucket_1Thread | 1 | 44.672 | NaN | ns/op |
+| tokenBucket_4Threads | 4 | 430.032 | NaN | ns/op |
+| tokenBucket_8Threads | 8 | 972.019 | NaN | ns/op |
+| tokenBucket_16Threads | 16 | 2197.598 | NaN | ns/op |
 
 ---
 
@@ -44,19 +44,19 @@
 
 | Benchmark | Threads | Score | Error | Units |
 |---|---|---|---|---|
-| slidingWindow_1Thread | 1 | *(TBD)* | *(TBD)* | ops/ms |
-| slidingWindow_4Threads | 4 | *(TBD)* | *(TBD)* | ops/ms |
-| slidingWindow_8Threads | 8 | *(TBD)* | *(TBD)* | ops/ms |
-| slidingWindow_16Threads | 16 | *(TBD)* | *(TBD)* | ops/ms |
+| slidingWindow_1Thread | 1 | 18592.128 | NaN | ops/ms |
+| slidingWindow_4Threads | 4 | 17000.687 | NaN | ops/ms |
+| slidingWindow_8Threads | 8 | 14843.053 | NaN | ops/ms |
+| slidingWindow_16Threads | 16 | 16167.424 | NaN | ops/ms |
 
 ## Sliding Window — Average Time (ns/op)
 
 | Benchmark | Threads | Score | Error | Units |
 |---|---|---|---|---|
-| slidingWindow_1Thread | 1 | *(TBD)* | *(TBD)* | ns/op |
-| slidingWindow_4Threads | 4 | *(TBD)* | *(TBD)* | ns/op |
-| slidingWindow_8Threads | 8 | *(TBD)* | *(TBD)* | ns/op |
-| slidingWindow_16Threads | 16 | *(TBD)* | *(TBD)* | ns/op |
+| slidingWindow_1Thread | 1 | 49.793 | NaN | ns/op |
+| slidingWindow_4Threads | 4 | 601.907 | NaN | ns/op |
+| slidingWindow_8Threads | 8 | 1115.335 | NaN | ns/op |
+| slidingWindow_16Threads | 16 | 2121.602 | NaN | ns/op |
 
 ---
 
@@ -64,8 +64,8 @@
 
 | Benchmark | Score | Error | Units |
 |---|---|---|---|
-| factoryCreation_TokenBucket | *(TBD)* | *(TBD)* | ns/op |
-| factoryCreation_SlidingWindow | *(TBD)* | *(TBD)* | ns/op |
+| factoryCreation_TokenBucket | 46.607 | NaN | ns/op |
+| factoryCreation_SlidingWindow | 90.878 | NaN | ns/op |
 
 ---
 

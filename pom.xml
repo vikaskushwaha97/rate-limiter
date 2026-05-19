@@ -15,7 +15,7 @@
         Production-grade Token Bucket and Sliding Window Counter rate limiting
         algorithms built with lock-free CAS operations using AtomicLong.
     </description>
-    <url>https://github.com/vikaskushwaha/rate-limiter</url>
+    <url>https://github.com/vikaskushwaha97/rate-limiter</url>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
