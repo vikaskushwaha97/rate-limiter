@@ -1,5 +1,6 @@
 package io.github.vikaskushwaha.ratelimiter;
 
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -82,6 +83,31 @@ public final class RateLimiterConfig {
                ", windowDurationNanos=" + windowDurationNanos +
                ", windowBuckets=" + windowBuckets +
                '}';
+    }
+
+    /**
+     * Two configs are equal if all five fields match.
+     * Follows the contract specified by {@link Object#equals(Object)}.
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof RateLimiterConfig)) return false;
+        RateLimiterConfig that = (RateLimiterConfig) o;
+        return capacity == that.capacity
+            && refillRate == that.refillRate
+            && refillPeriodNanos == that.refillPeriodNanos
+            && windowDurationNanos == that.windowDurationNanos
+            && windowBuckets == that.windowBuckets;
+    }
+
+    /**
+     * Hash code consistent with {@link #equals(Object)}.
+     */
+    @Override
+    public int hashCode() {
+        return Objects.hash(capacity, refillRate, refillPeriodNanos,
+                            windowDurationNanos, windowBuckets);
     }
 
     // =========================================================================
