@@ -57,7 +57,4 @@ logs/
 *.bak
 *.swp
 *~
-
-# Benchmark output
-*.json
-BENCHMARK_RESULTS.json
+*.py
