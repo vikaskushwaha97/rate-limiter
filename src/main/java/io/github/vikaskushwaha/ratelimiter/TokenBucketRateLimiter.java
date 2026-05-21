@@ -1,5 +1,6 @@
 package io.github.vikaskushwaha.ratelimiter;
 
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -66,6 +67,7 @@ public final class TokenBucketRateLimiter implements RateLimiter {
      * @param config validated configuration; must not be {@code null}
      */
     public TokenBucketRateLimiter(RateLimiterConfig config) {
+        Objects.requireNonNull(config, "config must not be null");
         this.capacity          = config.getCapacity();
         this.refillRate        = config.getRefillRate();
         this.refillPeriodNanos = config.getRefillPeriodNanos();

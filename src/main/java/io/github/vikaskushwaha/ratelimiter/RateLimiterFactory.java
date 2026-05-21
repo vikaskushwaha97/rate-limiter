@@ -1,5 +1,6 @@
 package io.github.vikaskushwaha.ratelimiter;
 
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -81,6 +82,7 @@ public final class RateLimiterFactory {
      * @return a configured {@link TokenBucketRateLimiter}
      */
     public static RateLimiter tokenBucket(RateLimiterConfig config) {
+        Objects.requireNonNull(config, "config must not be null");
         return new TokenBucketRateLimiter(config);
     }
 
@@ -127,6 +129,7 @@ public final class RateLimiterFactory {
      * @return a configured {@link SlidingWindowRateLimiter}
      */
     public static RateLimiter slidingWindow(RateLimiterConfig config) {
+        Objects.requireNonNull(config, "config must not be null");
         return new SlidingWindowRateLimiter(config);
     }
 }

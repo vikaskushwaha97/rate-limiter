@@ -190,14 +190,23 @@ Java 8 is EOL. Java 11 is the oldest LTS still in active production use at most 
 
 See [BENCHMARK_RESULTS.md](BENCHMARK_RESULTS.md) for full numbers.
 
-**Summary (Token Bucket, JMH, 5 iterations × 1s measurement, JVM: OpenJDK 11):**
+**Summary (Token Bucket, JMH, 5 iterations × 1s measurement, JVM: OpenJDK 17):**
 
 | Threads | Throughput | Avg Latency |
 |---|---|---|
-| 1 | ~22.0 M ops/sec | ~44 ns/op |
+| 1 | ~22.0 M ops/sec | ~45 ns/op |
 | 4 | ~26.5 M ops/sec | ~430 ns/op |
 | 8 | ~22.7 M ops/sec | ~972 ns/op |
-| 16 | ~8.8 M ops/sec | ~2197 ns/op |
+| 16 | ~8.8 M ops/sec | ~2198 ns/op |
+
+**Summary (Sliding Window, JMH, 5 iterations × 1s measurement, JVM: OpenJDK 17):**
+
+| Threads | Throughput | Avg Latency |
+|---|---|---|
+| 1 | ~18.6 M ops/sec | ~50 ns/op |
+| 4 | ~17.0 M ops/sec | ~602 ns/op |
+| 8 | ~14.8 M ops/sec | ~1115 ns/op |
+| 16 | ~16.2 M ops/sec | ~2122 ns/op |
 
 **To run benchmarks:**
 
@@ -232,9 +241,28 @@ mvn clean install
 
 **Expected output:**
 ```
-[INFO] Tests run: 25, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Tests run: 41, Failures: 0, Errors: 0, Skipped: 0
 [INFO] BUILD SUCCESS
 ```
+
+---
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+---
+
+## Changelog
+
+### v1.0.0
+- Initial release
+- Implemented Token Bucket and Sliding Window rate limiting algorithms
+- Added JMH benchmarks and concurrency stress tests
 
 ---
 

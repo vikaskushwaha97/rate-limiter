@@ -1,5 +1,6 @@
 package io.github.vikaskushwaha.ratelimiter;
 
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -82,6 +83,7 @@ public final class SlidingWindowRateLimiter implements RateLimiter {
      * @param config validated configuration; must not be {@code null}
      */
     public SlidingWindowRateLimiter(RateLimiterConfig config) {
+        Objects.requireNonNull(config, "config must not be null");
         this.limit        = config.getCapacity();   // "capacity" = limit here
         this.windowNanos  = config.getWindowDurationNanos();
         this.bucketCount  = config.getWindowBuckets();
