@@ -66,9 +66,18 @@ public final class TokenBucketRateLimiter implements RateLimiter {
      */
     private final AtomicReference<State> state;
 
-    // Rate tracking — lightweight, approximate, for getCurrentRate().
-    private final AtomicLong requestCount   = new AtomicLong(0);
-    private final AtomicLong windowStartNanos;
+    private static final class RateSnapshot {
+        final long startNanos;
+        final long count;
+
+        RateSnapshot(long startNanos, long count) {
+            this.startNanos = startNanos;
+            this.count = count;
+        }
+    }
+
+    // Rate tracking — lock-free and non-destructive
+    private final AtomicReference<RateSnapshot> rateSnapshot;
 
     /**
      * Constructs a Token Bucket limiter from a {@link RateLimiterConfig}.
@@ -84,7 +93,7 @@ public final class TokenBucketRateLimiter implements RateLimiter {
         long now = System.nanoTime();
         // Start full — common convention: new bucket is at max capacity.
         this.state             = new AtomicReference<>(new State(capacity, now));
-        this.windowStartNanos  = new AtomicLong(now);
+        this.rateSnapshot      = new AtomicReference<>(new RateSnapshot(now, 0));
     }
 
     /**
@@ -157,7 +166,7 @@ public final class TokenBucketRateLimiter implements RateLimiter {
 
             State next = new State(newTokens, newLastRefill);
             if (state.compareAndSet(current, next)) {
-                requestCount.incrementAndGet();
+                updateRate(permits, now);
                 return true;
             }
             // Another thread modified state — loop and retry
@@ -181,21 +190,40 @@ public final class TokenBucketRateLimiter implements RateLimiter {
     /**
      * {@inheritDoc}
      *
-     * <p>Rate is measured as requests granted in the last second.
-     * Uses a lightweight sliding measurement window reset on each read.
+     * <p>Rate is measured as requests granted in the current trailing 1-second window.
+     * The read is completely non-destructive and safe under heavy concurrency.
      */
     @Override
     public double getCurrentRate() {
-        long now     = System.nanoTime();
-        long start   = windowStartNanos.get();
-        long elapsed = now - start;
+        RateSnapshot current = rateSnapshot.get();
+        long elapsed = System.nanoTime() - current.startNanos;
+        
         if (elapsed <= 0) return 0.0;
-
-        long count = requestCount.getAndSet(0);
-        windowStartNanos.set(now);
+        
+        // If the window is older than 2 seconds, traffic has effectively stopped.
+        if (elapsed > 2_000_000_000L) return 0.0;
 
         double elapsedSecs = elapsed / 1_000_000_000.0;
-        return count / elapsedSecs;
+        return current.count / elapsedSecs;
+    }
+
+    private void updateRate(int permits, long now) {
+        while (true) {
+            RateSnapshot current = rateSnapshot.get();
+            long elapsed = now - current.startNanos;
+            
+            if (elapsed > 1_000_000_000L) {
+                // Window is older than 1 second — start a new one
+                if (rateSnapshot.compareAndSet(current, new RateSnapshot(now, permits))) {
+                    break;
+                }
+            } else {
+                // Add to current window
+                if (rateSnapshot.compareAndSet(current, new RateSnapshot(current.startNanos, current.count + permits))) {
+                    break;
+                }
+            }
+        }
     }
 
     // =========================================================================

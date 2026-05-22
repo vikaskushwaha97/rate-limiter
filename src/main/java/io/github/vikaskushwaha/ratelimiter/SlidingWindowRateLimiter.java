@@ -73,9 +73,7 @@ public final class SlidingWindowRateLimiter implements RateLimiter {
     /** Index of the most-recently active bucket. */
     private volatile int currentBucketIndex;
 
-    // Rate tracking — for getCurrentRate().
-    private final AtomicLong grantedCount   = new AtomicLong(0);
-    private final AtomicLong windowStartNanos;
+
 
     /**
      * Constructs a Sliding Window rate limiter from a {@link RateLimiterConfig}.
@@ -98,7 +96,6 @@ public final class SlidingWindowRateLimiter implements RateLimiter {
             bucketStartTimes[i] = now;
         }
         this.currentBucketIndex = 0;
-        this.windowStartNanos   = new AtomicLong(now);
     }
 
     /**
@@ -144,16 +141,19 @@ public final class SlidingWindowRateLimiter implements RateLimiter {
         long now = System.nanoTime();
         rotateBuckets(now);
 
-        // Sum all live buckets — conservative snapshot.
-        long total = sumBuckets();
-        if (total + permits > limit) return false;
-
-        // Increment the current bucket (may push us slightly over if many
-        // threads race here — bounded overage of at most threadCount - 1).
         int idx = currentBucketIndex;
-        buckets[idx].addAndGet(permits);
-        grantedCount.addAndGet(permits);
-        return true;
+        while (true) {
+            // Sum all live buckets to check the current window total
+            long total = sumBuckets();
+            if (total + permits > limit) return false;
+
+            // CAS loop on the specific bucket to prevent Stampede Breach
+            long currentInBucket = buckets[idx].get();
+            if (buckets[idx].compareAndSet(currentInBucket, currentInBucket + permits)) {
+                return true;
+            }
+            // Another thread modified this bucket, loop to recalculate total
+        }
     }
 
     /**
@@ -170,19 +170,11 @@ public final class SlidingWindowRateLimiter implements RateLimiter {
         }
     }
 
-    /** {@inheritDoc} */
     @Override
     public double getCurrentRate() {
-        long now     = System.nanoTime();
-        long start   = windowStartNanos.get();
-        long elapsed = now - start;
-        if (elapsed <= 0) return 0.0;
-
-        long count = grantedCount.getAndSet(0);
-        windowStartNanos.set(now);
-
-        double elapsedSecs = elapsed / 1_000_000_000.0;
-        return count / elapsedSecs;
+        long count = getCurrentWindowCount();
+        double windowSecs = windowNanos / 1_000_000_000.0;
+        return count / windowSecs;
     }
 
     // =========================================================================
@@ -223,7 +215,7 @@ public final class SlidingWindowRateLimiter implements RateLimiter {
             }
 
             currentBucketIndex = (int) ((idx + bucketsElapsed) % bucketCount);
-            bucketStartTimes[currentBucketIndex] = now;
+            bucketStartTimes[currentBucketIndex] = bucketStart + bucketsElapsed * bucketNanos;
         }
     }
 
