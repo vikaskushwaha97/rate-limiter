@@ -167,7 +167,7 @@ A queue of timestamped events has O(requests) memory and O(requests) scan time. 
 
 ### 4. Why is Sliding Window rotation `synchronized` but Token Bucket is not?
 
-Token Bucket refill uses CAS on two independent `AtomicLong` fields — the state machine allows losers to safely re-read and retry. Sliding Window rotation must atomically: (a) advance `currentBucketIndex`, (b) clear multiple stale bucket slots, and (c) update their timestamps. This multi-step operation cannot be expressed as a single CAS — `synchronized` is the correct tool for this **cold path** (fires at most once per sub-bucket period). The **hot path** (incrementing the current bucket) remains always lock-free.
+Token Bucket merges refill and permit consumption into a single CAS pipeline using an immutable `State` object wrapped in an `AtomicReference` — this guarantees atomic updates to both time and tokens without locks. Sliding Window rotation must atomically: (a) advance `currentBucketIndex`, (b) clear multiple stale bucket slots, and (c) update their timestamps. This multi-step operation across an array cannot be cleanly expressed as a single CAS — `synchronized` is the correct tool for this **cold path** (fires at most once per sub-bucket period). The **hot path** (incrementing the current bucket) remains always lock-free.
 
 ### 5. Why `RateLimiterFactory` instead of exposing constructors?
 

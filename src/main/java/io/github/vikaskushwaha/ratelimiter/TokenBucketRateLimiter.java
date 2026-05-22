@@ -17,11 +17,11 @@ import java.util.concurrent.atomic.AtomicReference;
  *
  * <h2>Concurrency design</h2>
  * <ul>
- *   <li>All mutable state is in two {@link AtomicLong} fields:
- *       {@code tokens} and {@code lastRefillNanos}.</li>
- *   <li>Refill uses a compare-and-set (CAS) loop — no {@code synchronized}
- *       block on the hot path.</li>
- *   <li>Token consumption is a single {@code compareAndSet} — also lock-free.</li>
+ *   <li>All mutable state is packed into an immutable {@link State} object 
+ *       and tracked via a single {@link AtomicReference}.</li>
+ *   <li>Refill and token consumption are combined into a single 
+ *       compare-and-set (CAS) pipeline, eliminating time-of-check to 
+ *       time-of-use (TOCTOU) race conditions.</li>
  *   <li>Under high contention, threads spin (CAS retry) for a bounded number
  *       of iterations then fall back gracefully.</li>
  * </ul>
