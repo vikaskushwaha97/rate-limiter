@@ -3,6 +3,7 @@ package io.github.vikaskushwaha.ratelimiter;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * A thread-safe Token Bucket rate limiter using lock-free CAS operations.
@@ -46,16 +47,24 @@ public final class TokenBucketRateLimiter implements RateLimiter {
     private final long refillPeriodNanos;
 
     /**
-     * Current token count — packed as a long to use AtomicLong.
-     * Invariant: 0 &le; tokens &le; capacity.
+     * Immutable state holding the current token count and the timestamp of
+     * the last refill check. Using a single object allows for atomic
+     * updates of both fields in a single CAS operation.
      */
-    private final AtomicLong tokens;
+    private static final class State {
+        final long tokens;
+        final long lastRefillNanos;
+
+        State(long tokens, long lastRefillNanos) {
+            this.tokens = tokens;
+            this.lastRefillNanos = lastRefillNanos;
+        }
+    }
 
     /**
-     * Timestamp (nanos) of the last refill check, used to compute accrued
-     * tokens between calls.
+     * The atomic reference to the current state.
      */
-    private final AtomicLong lastRefillNanos;
+    private final AtomicReference<State> state;
 
     // Rate tracking — lightweight, approximate, for getCurrentRate().
     private final AtomicLong requestCount   = new AtomicLong(0);
@@ -74,8 +83,7 @@ public final class TokenBucketRateLimiter implements RateLimiter {
 
         long now = System.nanoTime();
         // Start full — common convention: new bucket is at max capacity.
-        this.tokens            = new AtomicLong(capacity);
-        this.lastRefillNanos   = new AtomicLong(now);
+        this.state             = new AtomicReference<>(new State(capacity, now));
         this.windowStartNanos  = new AtomicLong(now);
     }
 
@@ -115,23 +123,44 @@ public final class TokenBucketRateLimiter implements RateLimiter {
      * {@inheritDoc}
      *
      * <p>Either all {@code permits} are granted atomically or none are.
+     * Computes necessary refill and decrements permits in a single atomic CAS loop.
      */
     @Override
     public boolean tryAcquire(int permits) {
         if (permits < 1) throw new IllegalArgumentException("permits must be >= 1, got " + permits);
         if (permits > capacity) return false; // can never be satisfied
 
-        refill();
+        long now = System.nanoTime();
 
-        // CAS loop: decrement by `permits` only if current value >= permits.
         while (true) {
-            long current = tokens.get();
-            if (current < permits) return false;
-            if (tokens.compareAndSet(current, current - permits)) {
+            State current = state.get();
+            long newTokens = current.tokens;
+            long newLastRefill = current.lastRefillNanos;
+
+            // Lazily compute accrued tokens
+            long elapsed = now - newLastRefill;
+            if (elapsed > 0) {
+                long periodsElapsed = elapsed / refillPeriodNanos;
+                if (periodsElapsed > 0) {
+                    long tokensToAdd = periodsElapsed * refillRate;
+                    newTokens = Math.min(capacity, newTokens + tokensToAdd);
+                    newLastRefill = newLastRefill + periodsElapsed * refillPeriodNanos;
+                }
+            }
+
+            if (newTokens < permits) {
+                return false; // Not enough tokens
+            }
+
+            // Consume permits
+            newTokens -= permits;
+
+            State next = new State(newTokens, newLastRefill);
+            if (state.compareAndSet(current, next)) {
                 requestCount.incrementAndGet();
                 return true;
             }
-            // Another thread changed tokens — retry.
+            // Another thread modified state — loop and retry
         }
     }
 
@@ -170,57 +199,6 @@ public final class TokenBucketRateLimiter implements RateLimiter {
     }
 
     // =========================================================================
-    // Private helpers
-    // =========================================================================
-
-    /**
-     * Lazily computes accrued tokens since the last refill and adds them,
-     * capped at {@link #capacity}.
-     *
-     * <p>Uses a CAS loop on {@code lastRefillNanos} to ensure exactly one
-     * thread performs the refill even under heavy concurrency.
-     */
-    private void refill() {
-        long now = System.nanoTime();
-
-        while (true) {
-            long lastRefill = lastRefillNanos.get();
-            long elapsed    = now - lastRefill;
-            if (elapsed <= 0) break; // no time has passed — nothing to refill
-
-            // How many full refill periods have elapsed?
-            long periodsElapsed = elapsed / refillPeriodNanos;
-            if (periodsElapsed == 0) break; // not even one period — skip
-
-            long tokensToAdd = periodsElapsed * refillRate;
-            // Advance the refill timestamp by exactly the periods consumed.
-            long newLastRefill = lastRefill + periodsElapsed * refillPeriodNanos;
-
-            // Only one thread wins this CAS; the losers loop and re-check.
-            if (lastRefillNanos.compareAndSet(lastRefill, newLastRefill)) {
-                // We won — add tokens, capped at capacity.
-                addTokens(tokensToAdd);
-                break;
-            }
-            // Lost the CAS — another thread refilled; re-read and continue.
-        }
-    }
-
-    /**
-     * Adds {@code toAdd} tokens using a CAS loop, capping at {@link #capacity}.
-     *
-     * @param toAdd number of tokens to add (must be &gt;= 0)
-     */
-    private void addTokens(long toAdd) {
-        while (true) {
-            long current = tokens.get();
-            long updated = Math.min(capacity, current + toAdd);
-            if (tokens.compareAndSet(current, updated)) break;
-            // Another thread modified tokens concurrently — retry.
-        }
-    }
-
-    // =========================================================================
     // Diagnostics — useful during testing and debugging
     // =========================================================================
 
@@ -231,8 +209,15 @@ public final class TokenBucketRateLimiter implements RateLimiter {
      * @return number of tokens currently in the bucket (0 to capacity)
      */
     public long getAvailableTokens() {
-        refill();
-        return tokens.get();
+        // Read-only calculation of currently available tokens
+        State current = state.get();
+        long elapsed = System.nanoTime() - current.lastRefillNanos;
+        if (elapsed > 0) {
+            long periodsElapsed = elapsed / refillPeriodNanos;
+            long tokensToAdd = periodsElapsed * refillRate;
+            return Math.min(capacity, current.tokens + tokensToAdd);
+        }
+        return current.tokens;
     }
 
     /**
@@ -246,6 +231,6 @@ public final class TokenBucketRateLimiter implements RateLimiter {
     public String toString() {
         return "TokenBucketRateLimiter{capacity=" + capacity +
                ", refillRate=" + refillRate +
-               "/period, availableTokens=" + tokens.get() + '}';
+               "/period, availableTokens=" + getAvailableTokens() + '}';
     }
 }
