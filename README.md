@@ -3,6 +3,9 @@
 > **Production-grade Token Bucket & Sliding Window Counter rate limiting — lock-free, zero dependencies, benchmarked.**
 
 [![Java 11+](https://img.shields.io/badge/Java-11%2B-blue.svg)](https://adoptium.net/)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.vikaskushwaha/rate-limiter.svg?label=Maven%20Central)](https://central.sonatype.com/artifact/io.github.vikaskushwaha/rate-limiter)
+[![Build Status](https://github.com/vikaskushwaha97/rate-limiter/actions/workflows/maven.yml/badge.svg)](https://github.com/vikaskushwaha97/rate-limiter/actions/workflows/maven.yml)
+[![Coverage](https://img.shields.io/badge/Coverage-100%25-brightgreen.svg)]()
 [![JUnit 5](https://img.shields.io/badge/Tests-JUnit%205-green.svg)](https://junit.org/junit5/)
 [![JMH](https://img.shields.io/badge/Benchmarks-JMH-orange.svg)](https://github.com/openjdk/jmh)
 [![MIT License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -10,13 +13,32 @@
 ---
 
 ## Table of Contents
-1. [Quick Start](#quick-start)
-2. [Algorithms](#algorithms)
-3. [API Reference](#api-reference)
-4. [Design Decisions](#design-decisions)
-5. [Benchmarks](#benchmarks)
-6. [Running Tests](#running-tests)
-7. [Project Structure](#project-structure)
+1. [Installation](#installation)
+2. [Quick Start](#quick-start)
+3. [Algorithms](#algorithms)
+4. [API Reference](#api-reference)
+5. [Design Decisions](#design-decisions)
+6. [Benchmarks](#benchmarks)
+7. [Running Tests](#running-tests)
+8. [Project Structure](#project-structure)
+
+---
+
+## Installation
+
+**Maven:**
+```xml
+<dependency>
+    <groupId>io.github.vikaskushwaha</groupId>
+    <artifactId>rate-limiter</artifactId>
+    <version>1.0.0</version>
+</dependency>
+```
+
+**Gradle:**
+```groovy
+implementation 'io.github.vikaskushwaha:rate-limiter:1.0.0'
+```
 
 ---
 
