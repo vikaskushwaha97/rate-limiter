@@ -1,0 +1,60 @@
+# ── Maven build output ────────────────────────────────────────────────────────
+target/
+*.class
+*.jar
+
+# ── IntelliJ IDEA ─────────────────────────────────────────────────────────────
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# ── Eclipse ───────────────────────────────────────────────────────────────────
+.classpath
+.project
+.settings/
+bin/
+
+# ── VS Code ───────────────────────────────────────────────────────────────────
+.vscode/
+
+# ── NetBeans ──────────────────────────────────────────────────────────────────
+nbproject/
+nbactions.xml
+nb-configuration.xml
+
+# ── OS generated ──────────────────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ── Maven Surefire / Failsafe test reports ────────────────────────────────────
+**/surefire-reports/
+**/failsafe-reports/
+
+# ── Maven site ────────────────────────────────────────────────────────────────
+**/site/
+
+# ── JMH benchmark output ──────────────────────────────────────────────────────
+benchmark-results.json
+BENCHMARK_RESULTS.json
+*.jmh.json
+jmh-result.json
+
+# ── Logs ──────────────────────────────────────────────────────────────────────
+*.log
+*.log.*
+logs/
+
+# ── Temporary / scratch ───────────────────────────────────────────────────────
+*.tmp
+*.bak
+*.swp
+*~
+*.py
